@@ -78,8 +78,8 @@ def plot_vorticity(ux, uy, cylinder, Nx, Ny, it, Nt):
     """
     if it % 10 == 0 or it == Nt - 1:
         plt.cla()
-        plt.xlim(100, 300)
-        plt.ylim(25, 75)
+        # plt.xlim(100, 300) # zoomed in the figure
+        # plt.ylim(25, 75)
         ux[cylinder] = 0
         uy[cylinder] = 0
         vorticity = (np.roll(ux, -1, axis=0) - np.roll(ux, 1, axis=0)) - (
