@@ -8,21 +8,19 @@ def initialize_simulation(Nx, Ny, NL, rho0):
     Initializes the simulation grid, including the distribution function and
     the initial random perturbations. Returns initial conditions for F, rho, and a cylinder mask.
     """
-    # Initial distribution function (F) and random perturbations
+    # initial distribution function (F) and random perturbations
     F = np.ones((Ny, Nx, NL))
     np.random.seed(42)
     F += 0.01 * np.random.randn(Ny, Nx, NL)
 
-    # Set initial density perturbations
+    # set initial density 
     X, Y = np.meshgrid(range(Nx), range(Ny))
     F[:, :, 3] += 2 * (1 + 0.2 * np.cos(2 * np.pi * X / Nx * 4))
 
-    # Calculate the macroscopic density and normalize F
+    # calculate density and normalize 
     rho = np.sum(F, axis=2)
     for i in range(NL):
         F[:, :, i] *= rho0 / rho
-
-    # Cylinder boundary mask
     cylinder = (X - Nx / 4) ** 2 + (Y - Ny / 2) ** 2 < (Ny / 4) ** 2
     return F, cylinder
 
@@ -31,10 +29,8 @@ def compute_macroscopic_variables(F, cxs, cys):
     """
     Computes macroscopic fluid variables: density, velocity in x and y directions.
     """
-    # Compute macroscopic density
     rho = np.sum(F, axis=2)
 
-    # Compute macroscopic velocities
     ux = np.sum(F * cxs, axis=2) / rho
     uy = np.sum(F * cys, axis=2) / rho
 
@@ -107,43 +103,40 @@ def plot_vorticity(ux, uy, cylinder, Nx, Ny, it, Nt):
 
 
 def main():
-    # Define simulation parameters
-    Nx, Ny = 400, 100
-    rho0, tau = 100, 0.6
-    Nt = 4000
+    # simulation parameters
+    Nx, Ny = 400, 100 # dimensions
+    rho0, tau = 100, 0.6 # 
+    Nt = 4000 # number of iterations
     plotRealTime = True
 
-    # Define lattice speeds and weights
+    # lattice speeds and weights
     NL = 9
     cxs = np.array([0, 0, 1, 1, 1, 0, -1, -1, -1])
     cys = np.array([0, 1, 1, 0, -1, -1, -1, 0, 1])
     weights = np.array([4 / 9, 1 / 9, 1 / 36, 1 / 9, 1 / 36, 1 / 9, 1 / 36, 1 / 9, 1 / 36])
 
-    # Initialize the simulation state
+    # init SIM
     F, cylinder = initialize_simulation(Nx, Ny, NL, rho0)
 
-    # Setup the figure for real-time plotting
+    # plt
     fig = plt.figure(figsize=(4, 2), dpi=80)
 
-    # Main simulation loop
+    # main loop 
     for it in range(Nt):
         print(f"Iteration: {it}")
 
-        # Drift step: move distribution functions
+        # drift step:
         for i, cx, cy in zip(range(NL), cxs, cys):
             F[:, :, i] = np.roll(F[:, :, i], cx, axis=1)
             F[:, :, i] = np.roll(F[:, :, i], cy, axis=0)
 
-        # Compute macroscopic variables
         rho, ux, uy = compute_macroscopic_variables(F, cxs, cys)
-
-        # Compute equilibrium distribution
         Feq = equilibrium_distribution(F, rho, ux, uy, cxs, cys, weights)
 
-        # Update the distribution function and apply boundary conditions
+        # update and apply boundary conditions
         F = update_fluid(F, Feq, tau, cylinder)
 
-        # Optionally plot vorticity in real time
+        # plot vorticity in real time
         if plotRealTime:
             plot_vorticity(ux, uy, cylinder, Nx, Ny, it, Nt)
 

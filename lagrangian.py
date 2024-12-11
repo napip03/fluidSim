@@ -48,15 +48,14 @@ def compute_macroscopic_variables(x_positions, y_positions, velocities, Nx, Ny):
     """
     Compute macroscopic variables: density and velocity fields from particle positions and velocities.
     """
-    # Compute density as the number of particles in each grid cell
+    # compute density as the number of particles in each grid cell
     grid_density = np.zeros((Ny, Nx))
     for i in range(len(x_positions)):
-        # Use modulo operation to wrap around positions within bounds
         x = int(np.mod(x_positions[i], Nx))
         y = int(np.mod(y_positions[i], Ny))
         grid_density[y, x] += 1
 
-    # Compute velocity field (average velocity in each cell)
+    # velocity field 
     ux = np.zeros((Ny, Nx))
     uy = np.zeros((Ny, Nx))
     for i in range(len(x_positions)):
@@ -65,7 +64,7 @@ def compute_macroscopic_variables(x_positions, y_positions, velocities, Nx, Ny):
         ux[y, x] += velocities[i, 0]
         uy[y, x] += velocities[i, 1]
 
-    # Normalize by the density to get average velocities
+    # normalization
     nonzero = grid_density > 0
     ux[nonzero] /= grid_density[nonzero]
     uy[nonzero] /= grid_density[nonzero]
@@ -99,38 +98,34 @@ def plot_vorticity(ux, uy, cylinder, Nx, Ny, it, Nt):
 
 
 def main():
-    # Simulation parameters
+    # init sim
     Nx, Ny = 400, 100
-    rho0 = 100  # Density
-    Nt = 4000  # Number of time steps
-    num_particles = 10000  # Number of particles to simulate
+    rho0 = 100  # density
+    Nt = 4000  # time steps / iterations
+    num_particles = 10000  # num particles
     plotRealTime = True
 
-    # Cylinder boundary (reflective)
+    # cylinder boundary 
     X, Y = np.meshgrid(range(Nx), range(Ny))
     cylinder = (X - Nx / 4) ** 2 + (Y - Ny / 2) ** 2 < (Ny / 4) ** 2
 
-    # Initialize particles
     x_positions, y_positions, velocities = initialize_particles(Nx, Ny, rho0, num_particles)
 
-    # Main simulation loop
+    # main loop
     for it in range(Nt):
         print(f"Iteration: {it}")
 
-        # Update particle positions
+        # update particle positions
         x_positions, y_positions = update_positions(x_positions, y_positions, velocities, Nx, Ny)
 
-        # Apply boundary conditions (reflective at cylinder)
+        # apply boundary conditions 
         velocities = apply_boundary_conditions(x_positions, y_positions, velocities, cylinder, Nx, Ny)
-
-        # Compute macroscopic variables (density, velocity)
         grid_density, ux, uy = compute_macroscopic_variables(x_positions, y_positions, velocities, Nx, Ny)
 
-        # Plot vorticity in real-time
+        # plot vorticity
         if plotRealTime:
             plot_vorticity(ux, uy, cylinder, Nx, Ny, it, Nt)
-
-    # Final plot after the simulation
+            
     plt.savefig('lagrangian_simulation.png', dpi=300)
     plt.show()
 
